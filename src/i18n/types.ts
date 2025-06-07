@@ -222,4 +222,4 @@ export interface I18nMessages {
   };
 }
 
-export type SupportedLanguage = "en" | "zh-CN";
+export type SupportedLanguage = "en" | "zh-CN" | "es";

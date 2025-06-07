@@ -1,6 +1,7 @@
 import { moment } from "obsidian";
 import { en } from "./locales/en";
 import { zhCN } from "./locales/zh-CN";
+import { es } from "./locales/es";
 import { I18nMessages, SupportedLanguage } from "./types";
 
 class I18nManager {
@@ -8,6 +9,7 @@ class I18nManager {
   private messages: Record<SupportedLanguage, I18nMessages> = {
     en: en,
     "zh-CN": zhCN,
+    es: es,
   };
 
   constructor() {
@@ -21,6 +23,8 @@ class I18nManager {
 
       if (locale && locale.startsWith("zh")) {
         this.currentLanguage = "zh-CN";
+      } else if (locale && locale.startsWith("es")) {
+        this.currentLanguage = "es";
       } else {
         this.currentLanguage = "en";
       }
@@ -74,6 +78,7 @@ class I18nManager {
     return [
       { code: "en", name: "English" },
       { code: "zh-CN", name: "简体中文" },
+      { code: "es", name: "Español" },
     ];
   }
 }
