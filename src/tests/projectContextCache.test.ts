@@ -113,7 +113,7 @@ describe("ProjectContextCache", () => {
     jest.clearAllMocks();
 
     // Mock globals
-    global.app = mockApp as any;
+    (global as any).app = mockApp as any;
 
     // Set up mock vault file retrieval
     mockApp.vault.getFiles.mockReturnValue([mockMarkdownFile, mockPdfFile]);

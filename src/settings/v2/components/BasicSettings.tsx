@@ -13,20 +13,23 @@ import { PlusSettings } from "@/settings/v2/components/PlusSettings";
 import { checkModelApiKey, formatDateTime } from "@/utils";
 import { HelpCircle, Key, Loader2 } from "lucide-react";
 import { Notice } from "obsidian";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { ApiKeyDialog } from "./ApiKeyDialog";
 import { cn } from "@/lib/utils";
+import { i18n, t } from "@/i18n";
+import type { SupportedLanguage } from "@/i18n/types";
 
 const ChainType2Label: Record<ChainType, string> = {
-  [ChainType.LLM_CHAIN]: "Chat",
-  [ChainType.VAULT_QA_CHAIN]: "Vault QA (Basic)",
-  [ChainType.COPILOT_PLUS_CHAIN]: "Copilot Plus (beta)",
-  [ChainType.PROJECT_CHAIN]: "Projects (alpha)",
+  [ChainType.LLM_CHAIN]: t("chat.mode.chat") || "Chat",
+  [ChainType.VAULT_QA_CHAIN]: t("chat.mode.vaultQA") || "Vault QA (Basic)",
+  [ChainType.COPILOT_PLUS_CHAIN]: t("chat.mode.copilotPlus") || "Copilot Plus (beta)",
+  [ChainType.PROJECT_CHAIN]: t("chat.mode.projects") || "Projects (alpha)",
 };
 
 export const BasicSettings: React.FC = () => {
   const settings = useSettingsValue();
   const [isChecking, setIsChecking] = useState(false);
+  const [forceRender, setForceRender] = useState(0);
   const [conversationNoteName, setConversationNoteName] = useState(
     settings.defaultConversationNoteName || "{$date}_{$time}__{$topic}"
   );
@@ -97,24 +100,56 @@ export const BasicSettings: React.FC = () => {
       value: getModelKeyFromModel(model),
     }));
 
+  const handleLanguageChange = useCallback((value: string) => {
+    try {
+      updateSetting("language", value);
+      i18n.setLanguage(value as SupportedLanguage);
+
+      // 强制重新渲染组件
+      setForceRender((prev) => prev + 1);
+
+      new Notice(t("settings.languageChanged") || "Language changed successfully");
+
+      // 延迟一点再次强制渲染，确保所有翻译都已更新
+      setTimeout(() => {
+        setForceRender((prev) => prev + 1);
+      }, 100);
+    } catch (error) {
+      console.error("Error changing language:", error);
+      new Notice("Error changing language");
+    }
+  }, []);
+
   return (
-    <div className="tw-space-y-4">
+    <div className="tw-space-y-4" key={forceRender}>
       <PlusSettings />
 
       {/* General Section */}
       <section>
-        <div className="tw-mb-3 tw-text-xl tw-font-bold">General</div>
+        <div className="tw-mb-3 tw-text-xl tw-font-bold">{t("settings.general")}</div>
         <div className="tw-space-y-4">
           <div className="tw-space-y-4">
+            {/* Language Selection */}
+            <SettingItem
+              type="select"
+              title={t("settings.language")}
+              description="Choose your preferred language / 选择您的首选语言"
+              value={settings.language || "en"}
+              onChange={handleLanguageChange}
+              options={i18n.getSupportedLanguages().map((lang) => ({
+                label: lang.name,
+                value: lang.code,
+              }))}
+              placeholder={t("settings.language")}
+            />
+
             {/* API Key Section */}
             <SettingItem
               type="custom"
-              title="API Keys"
+              title={t("settings.apiKeys")}
               description={
                 <div className="tw-flex tw-items-center tw-gap-1.5">
-                  <span className="tw-leading-none">
-                    Configure API keys for different AI providers
-                  </span>
+                  <span className="tw-leading-none">{t("settings.configureApiKeys")}</span>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -122,11 +157,10 @@ export const BasicSettings: React.FC = () => {
                       </TooltipTrigger>
                       <TooltipContent className="tw-flex tw-max-w-96 tw-flex-col tw-gap-2 tw-py-4">
                         <div className="tw-text-sm tw-font-medium tw-text-accent">
-                          API key required for chat and QA features
+                          {t("settings.apiKeyRequired")}
                         </div>
                         <div className="tw-text-xs tw-text-muted">
-                          To enable chat and QA functionality, please provide an API key from your
-                          selected provider.
+                          {t("settings.apiKeyRequiredDesc")}
                         </div>
                       </TooltipContent>
                     </Tooltip>
@@ -141,16 +175,16 @@ export const BasicSettings: React.FC = () => {
                 variant="secondary"
                 className="tw-flex tw-w-full tw-items-center tw-justify-center tw-gap-2 sm:tw-w-auto sm:tw-justify-start"
               >
-                Set Keys
+                {t("settings.setKeys")}
                 <Key className="tw-size-4" />
               </Button>
             </SettingItem>
           </div>
           <SettingItem
             type="select"
-            title="Default Chat Model"
-            description="Select the Chat model to use"
-            value={defaultModelActivated ? settings.defaultModelKey : "Select Model"}
+            title={t("settings.defaultChatModel")}
+            description={t("settings.defaultChatModelDesc")}
+            value={defaultModelActivated ? settings.defaultModelKey : t("settings.selectModel")}
             onChange={(value) => {
               const selectedModel = settings.activeModels.find(
                 (m) => m.enabled && getModelKeyFromModel(m) === value
@@ -167,19 +201,22 @@ export const BasicSettings: React.FC = () => {
             options={
               defaultModelActivated
                 ? enableActivatedModels
-                : [{ label: "Select Model", value: "Select Model" }, ...enableActivatedModels]
+                : [
+                    { label: t("settings.selectModel"), value: t("settings.selectModel") },
+                    ...enableActivatedModels,
+                  ]
             }
-            placeholder="Model"
+            placeholder={t("settings.model")}
           />
 
           <SettingItem
             type="select"
-            title="Embedding Model"
+            title={t("settings.embeddingModel")}
             description={
               <div className="tw-space-y-2">
                 <div className="tw-flex tw-items-center tw-gap-1.5">
                   <span className="tw-font-medium tw-leading-none tw-text-accent">
-                    Core Feature: Powers Semantic Search & QA
+                    {t("settings.embeddingModelDesc")}
                   </span>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
@@ -188,13 +225,12 @@ export const BasicSettings: React.FC = () => {
                       </TooltipTrigger>
                       <TooltipContent className="tw-flex tw-max-w-96 tw-flex-col tw-gap-2">
                         <div className="tw-pt-2 tw-text-sm tw-text-muted">
-                          This model converts text into vector representations, essential for
-                          semantic search and QA functionality. Changing the embedding model will:
+                          {t("settings.embeddingModelTooltip")}
                         </div>
                         <ul className="tw-pl-4 tw-text-sm tw-text-muted">
-                          <li>Require rebuilding your vault&#39;s vector index</li>
-                          <li>Affect semantic search quality</li>
-                          <li>Impact QA feature performance</li>
+                          <li>{t("settings.rebuildIndexRequired")}</li>
+                          <li>{t("settings.affectSearchQuality")}</li>
+                          <li>{t("settings.impactQAPerformance")}</li>
                         </ul>
                       </TooltipContent>
                     </Tooltip>
@@ -208,16 +244,16 @@ export const BasicSettings: React.FC = () => {
               label: getModelDisplayWithIcons(model),
               value: getModelKeyFromModel(model),
             }))}
-            placeholder="Model"
+            placeholder={t("settings.model")}
           />
 
           {/* Basic Configuration Group */}
           <SettingItem
             type="select"
-            title="Default Mode"
+            title={t("settings.defaultMode")}
             description={
               <div className="tw-flex tw-items-center tw-gap-1.5">
-                <span className="tw-leading-none">Select the default chat mode</span>
+                <span className="tw-leading-none">{t("settings.selectDefaultMode")}</span>
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -226,17 +262,14 @@ export const BasicSettings: React.FC = () => {
                     <TooltipContent className="tw-flex tw-max-w-96 tw-flex-col tw-gap-2">
                       <ul className="tw-pl-4 tw-text-sm tw-text-muted">
                         <li>
-                          <strong>Chat:</strong> Regular chat mode for general conversations and
-                          tasks. <i>Free to use with your own API key.</i>
+                          <strong>{t("chat.mode.chat")}:</strong> {t("settings.chatModeDesc")}
                         </li>
                         <li>
-                          <strong>Vault QA (Basic):</strong> Ask questions about your vault content
-                          with semantic search. <i>Free to use with your own API key.</i>
+                          <strong>{t("chat.mode.vaultQA")}:</strong> {t("settings.vaultQAModeDesc")}
                         </li>
                         <li>
-                          <strong>Copilot Plus:</strong> Covers all features of the 2 free modes,
-                          plus advanced paid features including chat context menu, advanced search,
-                          AI agents, and more. Check out{" "}
+                          <strong>{t("chat.mode.copilotPlus")}:</strong>{" "}
+                          {t("settings.copilotPlusModeDesc")} Check out{" "}
                           <a
                             href={createPlusPageUrl(PLUS_UTM_MEDIUMS.MODE_SELECT_TOOLTIP)}
                             target="_blank"
@@ -263,20 +296,20 @@ export const BasicSettings: React.FC = () => {
 
           <SettingItem
             type="select"
-            title="Open Plugin In"
-            description="Choose where to open the plugin"
+            title={t("settings.openPluginIn")}
+            description={t("settings.openPluginInDesc")}
             value={settings.defaultOpenArea}
             onChange={(value) => updateSetting("defaultOpenArea", value as DEFAULT_OPEN_AREA)}
             options={[
-              { label: "Sidebar View", value: DEFAULT_OPEN_AREA.VIEW },
-              { label: "Editor", value: DEFAULT_OPEN_AREA.EDITOR },
+              { label: t("settings.sidebarView"), value: DEFAULT_OPEN_AREA.VIEW },
+              { label: t("settings.editor"), value: DEFAULT_OPEN_AREA.EDITOR },
             ]}
           />
 
           <SettingItem
             type="text"
-            title="Default Conversation Folder Name"
-            description="The default folder name where chat conversations will be saved. Default is 'copilot-conversations'"
+            title={t("settings.defaultConversationFolder")}
+            description={t("settings.defaultConversationFolderDesc")}
             value={settings.defaultSaveFolder}
             onChange={(value) => updateSetting("defaultSaveFolder", value)}
             placeholder="copilot-conversations"
@@ -284,8 +317,8 @@ export const BasicSettings: React.FC = () => {
 
           <SettingItem
             type="text"
-            title="Custom Prompts Folder Name"
-            description="The default folder name where custom prompts will be saved. Default is 'copilot-custom-prompts'"
+            title={t("settings.customPromptsFolder")}
+            description={t("settings.customPromptsFolderDesc")}
             value={settings.customPromptsFolder}
             onChange={(value) => updateSetting("customPromptsFolder", value)}
             placeholder="copilot-custom-prompts"
@@ -293,8 +326,8 @@ export const BasicSettings: React.FC = () => {
 
           <SettingItem
             type="text"
-            title="Default Conversation Tag"
-            description="The default tag to be used when saving a conversation. Default is 'ai-conversations'"
+            title={t("settings.defaultConversationTag")}
+            description={t("settings.defaultConversationTagDesc")}
             value={settings.defaultConversationTag}
             onChange={(value) => updateSetting("defaultConversationTag", value)}
             placeholder="ai-conversations"
@@ -302,12 +335,10 @@ export const BasicSettings: React.FC = () => {
 
           <SettingItem
             type="custom"
-            title="Conversation Filename Template"
+            title={t("settings.conversationFilenameTemplate")}
             description={
               <div className="tw-flex tw-items-start tw-gap-1.5 ">
-                <span className="tw-leading-none">
-                  Customize the format of saved conversation note names.
-                </span>
+                <span className="tw-leading-none">{t("settings.customizeFilenameFormat")}</span>
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -315,25 +346,25 @@ export const BasicSettings: React.FC = () => {
                     </TooltipTrigger>
                     <TooltipContent className="tw-flex tw-max-w-96 tw-flex-col tw-gap-2 tw-py-4">
                       <div className="tw-text-sm tw-font-medium tw-text-accent">
-                        Note: All the following variables must be included in the template.
+                        {t("settings.filenameTemplateNote")}
                       </div>
                       <div>
                         <div className="tw-text-sm tw-font-medium tw-text-muted">
-                          Available variables:
+                          {t("settings.availableVariables")}
                         </div>
                         <ul className="tw-pl-4 tw-text-sm tw-text-muted">
                           <li>
-                            <strong>{"{$date}"}</strong>: Date in YYYYMMDD format
+                            <strong>{"{$date}"}</strong>: {t("settings.dateVariable")}
                           </li>
                           <li>
-                            <strong>{"{$time}"}</strong>: Time in HHMMSS format
+                            <strong>{"{$time}"}</strong>: {t("settings.timeVariable")}
                           </li>
                           <li>
-                            <strong>{"{$topic}"}</strong>: Chat conversation topic
+                            <strong>{"{$topic}"}</strong>: {t("settings.topicVariable")}
                           </li>
                         </ul>
                         <i className="tw-mt-2 tw-text-sm tw-text-muted">
-                          Example: {"{$date}_{$time}__{$topic}"} →
+                          {t("settings.filenameExample")} {"{$date}_{$time}__{$topic}"} →
                           20250114_153232__polish_this_article_[[Readme]]
                         </i>
                       </div>
@@ -364,10 +395,10 @@ export const BasicSettings: React.FC = () => {
                 {isChecking ? (
                   <>
                     <Loader2 className="tw-mr-2 tw-size-4 tw-animate-spin" />
-                    Apply
+                    {t("common.apply")}
                   </>
                 ) : (
-                  "Apply"
+                  t("common.apply")
                 )}
               </Button>
             </div>
@@ -376,24 +407,24 @@ export const BasicSettings: React.FC = () => {
           {/* Feature Toggle Group */}
           <SettingItem
             type="switch"
-            title="Autosave Chat"
-            description="Automatically save the chat when starting a new one or when the plugin reloads"
+            title={t("settings.autosaveChat")}
+            description={t("settings.autosaveChatDesc")}
             checked={settings.autosaveChat}
             onCheckedChange={(checked) => updateSetting("autosaveChat", checked)}
           />
 
           <SettingItem
             type="switch"
-            title="Suggested Prompts"
-            description="Show suggested prompts in the chat view"
+            title={t("settings.suggestedPrompts")}
+            description={t("settings.suggestedPromptsDesc")}
             checked={settings.showSuggestedPrompts}
             onCheckedChange={(checked) => updateSetting("showSuggestedPrompts", checked)}
           />
 
           <SettingItem
             type="switch"
-            title="Relevant Notes"
-            description="Show relevant notes in the chat view"
+            title={t("settings.relevantNotes")}
+            description={t("settings.relevantNotesDesc")}
             checked={settings.showRelevantNotes}
             onCheckedChange={(checked) => updateSetting("showRelevantNotes", checked)}
           />

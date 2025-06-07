@@ -1,4 +1,12 @@
 import { BrevilabsClient } from "@/LLMProviders/brevilabsClient";
+import { i18n } from "@/i18n";
+import {
+  getModelKeyFromModel,
+  getSettings,
+  sanitizeSettings,
+  setSettings,
+  subscribeToSettingsChange,
+} from "@/settings/model";
 import ProjectManager from "@/LLMProviders/projectManager";
 import { CustomModel, getCurrentProject } from "@/aiParams";
 import { AutocompleteService } from "@/autocomplete/autocompleteService";
@@ -7,6 +15,7 @@ import { registerCommands } from "@/commands";
 import CopilotView from "@/components/CopilotView";
 import { APPLY_VIEW_TYPE, ApplyView } from "@/components/composer/ApplyView";
 import { LoadChatHistoryModal } from "@/components/modals/LoadChatHistoryModal";
+import type { SupportedLanguage } from "@/i18n/types";
 
 import { CHAT_VIEWTYPE, DEFAULT_OPEN_AREA, EVENT_NAMES } from "@/constants";
 import { registerContextMenu } from "@/contextMenu";
@@ -16,13 +25,6 @@ import { checkIsPlusUser } from "@/plusUtils";
 import { HybridRetriever } from "@/search/hybridRetriever";
 import VectorStoreManager from "@/search/vectorStoreManager";
 import { CopilotSettingTab } from "@/settings/SettingsPage";
-import {
-  getModelKeyFromModel,
-  getSettings,
-  sanitizeSettings,
-  setSettings,
-  subscribeToSettingsChange,
-} from "@/settings/model";
 import SharedState from "@/sharedState";
 import { FileParserManager } from "@/tools/FileParserManager";
 import {
@@ -50,7 +52,14 @@ export default class CopilotPlugin extends Plugin {
   private autocompleteService: AutocompleteService;
 
   async onload(): Promise<void> {
+    // 首先加载设置
     await this.loadSettings();
+
+    // 然后初始化语言设置
+    const data = await this.loadData();
+    const savedLanguage = data?.language || getSettings().language || "en";
+    i18n.setLanguage(savedLanguage as SupportedLanguage);
+
     this.settingsUnsubscriber = subscribeToSettingsChange(async (prev, next) => {
       if (next.enableEncryption) {
         await this.saveData(await encryptAllKeys(next));
@@ -236,10 +245,13 @@ export default class CopilotPlugin extends Plugin {
     const leaves = this.app.workspace.getLeavesOfType(CHAT_VIEWTYPE);
     if (leaves.length === 0) {
       if (getSettings().defaultOpenArea === DEFAULT_OPEN_AREA.VIEW) {
-        await this.app.workspace.getRightLeaf(false).setViewState({
-          type: CHAT_VIEWTYPE,
-          active: true,
-        });
+        const rightLeaf = this.app.workspace.getRightLeaf(false);
+        if (rightLeaf) {
+          await rightLeaf.setViewState({
+            type: CHAT_VIEWTYPE,
+            active: true,
+          });
+        }
       } else {
         await this.app.workspace.getLeaf(true).setViewState({
           type: CHAT_VIEWTYPE,
@@ -259,7 +271,13 @@ export default class CopilotPlugin extends Plugin {
   async loadSettings() {
     const savedSettings = await this.loadData();
     const sanitizedSettings = sanitizeSettings(savedSettings);
+
     setSettings(sanitizedSettings);
+
+    // 确保语言设置也被应用到 i18n
+    if (sanitizedSettings.language) {
+      i18n.setLanguage(sanitizedSettings.language as SupportedLanguage);
+    }
   }
 
   mergeActiveModels(
@@ -334,43 +352,29 @@ export default class CopilotPlugin extends Plugin {
     this.sharedState.clearChatHistory();
     messages.forEach((message) => this.sharedState.addMessage(message));
 
-    // Update the chain's memory with the loaded messages
     await updateChatMemory(messages, this.projectManager.getCurrentChainManager().memoryManager);
 
-    // Check if the Copilot view is already active
     const existingView = this.app.workspace.getLeavesOfType(CHAT_VIEWTYPE)[0];
     if (!existingView) {
-      // Only activate the view if it's not already open
       this.activateView();
     } else {
-      // If the view is already open, just update its content
       const copilotView = existingView.view as CopilotView;
       copilotView.updateView();
     }
   }
 
   async handleNewChat() {
-    // First autosave the current chat if the setting is enabled
     await this.autosaveCurrentChat();
-
-    // Clear chat history
     this.sharedState.clearChatHistory();
-
-    // Clear chain memory
     this.projectManager.getCurrentChainManager().memoryManager.clearChatMemory();
 
-    // Update view if it exists
     const existingView = this.app.workspace.getLeavesOfType(CHAT_VIEWTYPE)[0];
     if (existingView) {
       const copilotView = existingView.view as CopilotView;
       copilotView.updateView();
     } else {
-      // If view doesn't exist, open it
       await this.activateView();
     }
-
-    // Note: UI-specific state like includeActiveNote setting is handled in the Chat component
-    // This ensures proper separation of concerns between plugin logic and UI state
   }
 
   async newChat() {
@@ -391,5 +395,23 @@ export default class CopilotPlugin extends Plugin {
       content: doc.pageContent,
       metadata: doc.metadata,
     }));
+  }
+
+  // 新增：语言设置方法
+  async setLanguage(language: string) {
+    i18n.setLanguage(language as SupportedLanguage);
+
+    // 更新设置
+    const currentSettings = getSettings();
+    const newSettings = { ...currentSettings, language };
+    setSettings(newSettings);
+
+    // 保存到插件数据
+    const data = (await this.loadData()) || {};
+    data.language = language;
+    await this.saveData(data);
+
+    // 触发界面更新
+    this.app.workspace.trigger("copilot:language-changed");
   }
 }

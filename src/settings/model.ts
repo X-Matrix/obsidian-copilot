@@ -105,6 +105,7 @@ export interface CopilotSettings {
   projectList: Array<ProjectConfig>;
   passMarkdownImages: boolean;
   enableCustomPromptTemplating: boolean;
+  language: string;
 }
 
 export const settingsStore = createStore();
@@ -183,7 +184,7 @@ export function sanitizeSettings(settings: CopilotSettings): CopilotSettings {
   }
 
   // fix: Maintain consistency between EmbeddingModelProviders.AZURE_OPENAI and ChatModelProviders.AZURE_OPENAI,
-  // where it was 'azure_openai' before EmbeddingModelProviders.AZURE_OPENAI.
+  // where it was 'azure_open_ai' before EmbeddingModelProviders.AZURE_OPENAI.
   if (!settingsToSanitize.activeEmbeddingModels) {
     settingsToSanitize.activeEmbeddingModels = BUILTIN_EMBEDDING_MODELS.map((model) => ({
       ...model,
@@ -193,7 +194,8 @@ export function sanitizeSettings(settings: CopilotSettings): CopilotSettings {
     settingsToSanitize.activeEmbeddingModels = settingsToSanitize.activeEmbeddingModels.map((m) => {
       return {
         ...m,
-        provider: m.provider === "azure_openai" ? EmbeddingModelProviders.AZURE_OPENAI : m.provider,
+        provider:
+          m.provider === "azure_open_ai" ? EmbeddingModelProviders.AZURE_OPENAI : m.provider,
       };
     });
   }

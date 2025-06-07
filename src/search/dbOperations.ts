@@ -10,6 +10,7 @@ import { MD5 } from "crypto-js";
 import { App, Notice, Platform } from "obsidian";
 import { ChunkedStorage } from "./chunkedStorage";
 import { getVectorLength } from "./searchUtils";
+import { t } from "@/i18n";
 
 export interface OramaDocument {
   id: string;
@@ -258,21 +259,25 @@ export class DBOperations {
   }
 
   private async createNewDb(embeddingInstance: Embeddings | undefined): Promise<Orama<any>> {
-    if (!embeddingInstance) {
-      throw new CustomError("Embedding instance not found.");
-    }
-
     const vectorLength = await getVectorLength(embeddingInstance);
     if (!vectorLength || vectorLength === 0) {
-      throw new CustomError(
-        "Invalid vector length detected. Please check if your embedding model is working."
-      );
+      throw new CustomError(t("search.invalidVectorLength"));
     }
 
-    const schema = this.createDynamicSchema(vectorLength);
-
     const db = await create({
-      schema,
+      schema: {
+        id: "string" as const,
+        title: "string" as const,
+        path: "string" as const,
+        content: "string" as const,
+        embedding: `vector[${vectorLength}]` as const,
+        embeddingModel: "string" as const,
+        created_at: "number" as const,
+        ctime: "number" as const,
+        mtime: "number" as const,
+        tags: "string[]" as const,
+        extension: "string" as const,
+      },
       components: {
         tokenizer: {
           stemmer: undefined,
@@ -280,16 +285,17 @@ export class DBOperations {
         },
       },
     });
+
     logInfo(
       `Created new Orama database for ${this.dbPath}. ` +
-        `Embedding model: ${EmbeddingsManager.getModelName(embeddingInstance)} with vector length ${vectorLength}.`
+        `Embedding model: ${embeddingInstance ? EmbeddingsManager.getModelName(embeddingInstance) : "undefined"} with vector length ${vectorLength}.`
     );
     this.isIndexLoaded = true;
     return db;
   }
 
   public static async getDocsByPath(db: Orama<any>, path: string) {
-    if (!db) throw new Error("DB not initialized");
+    if (!db) throw new Error(t("errors.dbNotInitialized"));
     if (!path) return;
     const result = await search(db, {
       term: path,
