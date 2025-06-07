@@ -1,6 +1,7 @@
 import { SettingItem } from "@/components/ui/setting-item";
 import { updateSetting, useSettingsValue } from "@/settings/model";
 import { PromptSortStrategy } from "@/types";
+import { t } from "@/i18n";
 import React from "react";
 
 export const AdvancedSettings: React.FC = () => {
@@ -12,18 +13,18 @@ export const AdvancedSettings: React.FC = () => {
       <section>
         <SettingItem
           type="textarea"
-          title="User System Prompt"
-          description="Customize the system prompt for all messages, may result in unexpected behavior!"
+          title={t("advanced.userSystemPrompt")}
+          description={t("advanced.userSystemPromptDesc")}
           value={settings.userSystemPrompt}
           onChange={(value) => updateSetting("userSystemPrompt", value)}
-          placeholder="Enter your system prompt here..."
+          placeholder={t("advanced.userSystemPromptPlaceholder")}
         />
 
         <div className="tw-space-y-4">
           <SettingItem
             type="switch"
-            title="Custom Prompt Templating"
-            description="Enable templating to process variables like {activenote}, {foldername} or {#tag} in prompts. Disable to use raw prompts without any processing."
+            title={t("advanced.customPromptTemplating")}
+            description={t("advanced.customPromptTemplatingDesc")}
             checked={settings.enableCustomPromptTemplating}
             onCheckedChange={(checked) => {
               updateSetting("enableCustomPromptTemplating", checked);
@@ -32,20 +33,20 @@ export const AdvancedSettings: React.FC = () => {
 
           <SettingItem
             type="select"
-            title="Custom Prompts Sort Strategy"
-            description="Choose how to sort custom prompts (by recent usage or alphabetically)"
+            title={t("advanced.customPromptsSortStrategy")}
+            description={t("advanced.customPromptsSortStrategyDesc")}
             value={settings.promptSortStrategy}
             onChange={(value) => updateSetting("promptSortStrategy", value)}
             options={[
-              { label: "Recency", value: PromptSortStrategy.TIMESTAMP },
-              { label: "Alphabetical", value: PromptSortStrategy.ALPHABETICAL },
+              { label: t("advanced.sortByRecency"), value: PromptSortStrategy.TIMESTAMP },
+              { label: t("advanced.sortByAlphabetical"), value: PromptSortStrategy.ALPHABETICAL },
             ]}
           />
 
           <SettingItem
             type="switch"
-            title="Enable Encryption"
-            description="Enable encryption for the API keys."
+            title={t("advanced.enableEncryption")}
+            description={t("advanced.enableEncryptionDesc")}
             checked={settings.enableEncryption}
             onCheckedChange={(checked) => {
               updateSetting("enableEncryption", checked);
@@ -54,8 +55,8 @@ export const AdvancedSettings: React.FC = () => {
 
           <SettingItem
             type="switch"
-            title="Debug Mode"
-            description="Debug mode will log some debug message to the console."
+            title={t("advanced.debugMode")}
+            description={t("advanced.debugModeDesc")}
             checked={settings.debug}
             onCheckedChange={(checked) => {
               updateSetting("debug", checked);

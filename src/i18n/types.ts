@@ -103,6 +103,122 @@ export interface I18nMessages {
     timeVariable: string;
     topicVariable: string;
     filenameExample: string;
+    // QA Settings
+    qaSettings: string;
+    autoIndexStrategy: string;
+    autoIndexStrategyDesc: string;
+    autoIndexStrategyTooltip: string;
+    autoIndexNever: string;
+    autoIndexOnStartup: string;
+    autoIndexOnModeSwitch: string;
+    autoIndexWarning: string;
+    maxSources: string;
+    maxSourcesDesc: string;
+    requestsPerMinute: string;
+    requestsPerMinuteDesc: string;
+    embeddingBatchSize: string;
+    embeddingBatchSizeDesc: string;
+    numPartitions: string;
+    numPartitionsDesc: string;
+    exclusions: string;
+    exclusionsDesc: string;
+    inclusions: string;
+    inclusionsDesc: string;
+    manage: string;
+    enableObsidianSync: string;
+    enableObsidianSyncDesc: string;
+    disableIndexOnMobile: string;
+    disableIndexOnMobileDesc: string;
+    strategy: string;
+  };
+  advanced: {
+    userSystemPrompt: string;
+    userSystemPromptDesc: string;
+    userSystemPromptPlaceholder: string;
+    customPromptTemplating: string;
+    customPromptTemplatingDesc: string;
+    customPromptsSortStrategy: string;
+    customPromptsSortStrategyDesc: string;
+    sortByRecency: string;
+    sortByAlphabetical: string;
+    enableEncryption: string;
+    enableEncryptionDesc: string;
+    debugMode: string;
+    debugModeDesc: string;
+  };
+  commands: {
+    title: string;
+    description: string;
+    tip: string;
+    table: {
+      name: string;
+      inMenu: string;
+    };
+    actions: {
+      edit: string;
+      copy: string;
+      delete: string;
+      addCommand: string;
+    };
+    copyPrefix: string;
+    defaults: {
+      fixGrammar: {
+        name: string;
+        prompt: string;
+      };
+      translateToChinese: {
+        name: string;
+        prompt: string;
+      };
+      summarize: {
+        name: string;
+        prompt: string;
+      };
+      simplify: {
+        name: string;
+        prompt: string;
+      };
+      emojify: {
+        name: string;
+        prompt: string;
+      };
+      makeShorter: {
+        name: string;
+        prompt: string;
+      };
+      makeLonger: {
+        name: string;
+        prompt: string;
+      };
+      generateToc: {
+        name: string;
+        prompt: string;
+      };
+      generateGlossary: {
+        name: string;
+        prompt: string;
+      };
+      removeUrls: {
+        name: string;
+        prompt: string;
+      };
+      rewriteAsTweet: {
+        name: string;
+        prompt: string;
+      };
+      rewriteAsThread: {
+        name: string;
+        prompt: string;
+      };
+      explainLikeChild: {
+        name: string;
+        prompt: string;
+      };
+      rewriteAsPressRelease: {
+        name: string;
+        prompt: string;
+      };
+    };
   };
 }
 

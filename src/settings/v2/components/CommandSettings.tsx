@@ -3,6 +3,7 @@ import { InlineEditCommandSettings, updateSetting } from "@/settings/model";
 import { Button } from "@/components/ui/button";
 import { InlineEditCommandSettingsModal } from "@/components/modals/InlineEditCommandSettingsModal";
 import { hasModifiedCommand, useInlineEditCommands } from "@/commands/inlineEditCommandUtils";
+import { t } from "@/i18n";
 import {
   Lightbulb,
   PencilLine,
@@ -130,15 +131,15 @@ const SortableTableRow: React.FC<{
                 }
               >
                 <PencilLine className="tw-mr-2 tw-size-4" />
-                Edit
+                {t("commands.actions.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDuplicate(command)}>
                 <Copy className="tw-mr-2 tw-size-4" />
-                Copy
+                {t("commands.actions.copy")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onRemove(command)} className="tw-text-error">
                 <Trash2 className="tw-mr-2 tw-size-4" />
-                Delete
+                {t("commands.actions.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -180,7 +181,7 @@ export const CommandSettings: React.FC = () => {
   const handleDuplicate = (command: InlineEditCommandSettings) => {
     const duplicatedCommand = {
       ...command,
-      name: `${command.name} (copy)`,
+      name: `${command.name}${t("commands.copyPrefix")}`,
     };
     const index = commands.findIndex((c) => c === command);
     if (index !== -1) {
@@ -217,16 +218,12 @@ export const CommandSettings: React.FC = () => {
     <div className="tw-space-y-4">
       <section>
         <div className="tw-mb-4 tw-flex tw-flex-col tw-gap-2">
-          <div className="tw-text-xl tw-font-bold">Custom Commands</div>
-          <div className="tw-text-sm tw-text-muted">
-            To trigger a custom command, highlight text in the editor and select it from the command
-            palette, or right-click and choose it from the context menu if configured.
-          </div>
+          <div className="tw-text-xl tw-font-bold">{t("commands.title")}</div>
+          <div className="tw-text-sm tw-text-muted">{t("commands.description")}</div>
         </div>
         {!hasModifiedCommand() && (
           <div className="tw-flex tw-items-start tw-gap-2 tw-rounded-md tw-border tw-border-solid tw-border-border tw-p-4 tw-text-muted">
-            <Lightbulb className="tw-size-5" /> Take control of your inline edit commands! You can
-            now create your own or edit built-in ones to tailor functionality to your needs.
+            <Lightbulb className="tw-size-5" /> {t("commands.tip")}
           </div>
         )}
 
@@ -240,8 +237,10 @@ export const CommandSettings: React.FC = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="tw-w-10"></TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="tw-w-20 tw-text-center">In Menu</TableHead>
+                  <TableHead>{t("commands.table.name")}</TableHead>
+                  <TableHead className="tw-w-20 tw-text-center">
+                    {t("commands.table.inMenu")}
+                  </TableHead>
                   <TableHead className="tw-w-10"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -278,7 +277,7 @@ export const CommandSettings: React.FC = () => {
                 ).open()
               }
             >
-              <Plus className="tw-size-4" /> Add Command
+              <Plus className="tw-size-4" /> {t("commands.actions.addCommand")}
             </Button>
           </div>
         </div>

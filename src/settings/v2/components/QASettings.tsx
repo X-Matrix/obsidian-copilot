@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { VAULT_VECTOR_STORE_STRATEGIES } from "@/constants";
 import VectorStoreManager from "@/search/vectorStoreManager";
 import { updateSetting, useSettingsValue } from "@/settings/model";
+import { t } from "@/i18n";
 import { HelpCircle } from "lucide-react";
 import React from "react";
 
@@ -29,12 +30,10 @@ export const QASettings: React.FC = () => {
           {/* Auto-Index Strategy */}
           <SettingItem
             type="select"
-            title="Auto-Index Strategy"
+            title={t("settings.autoIndexStrategy")}
             description={
               <div className="tw-flex tw-items-center tw-gap-1.5">
-                <span className="tw-leading-none">
-                  Decide when you want the vault to be indexed.
-                </span>
+                <span className="tw-leading-none">{t("settings.autoIndexStrategyDesc")}</span>
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -44,7 +43,7 @@ export const QASettings: React.FC = () => {
                       <div className="tw-space-y-2 tw-py-2">
                         <div className="tw-space-y-1">
                           <div className="tw-text-sm tw-text-muted">
-                            Choose when to index your vault:
+                            {t("settings.autoIndexStrategyTooltip")}
                           </div>
                           <ul className="tw-list-disc tw-space-y-1 tw-pl-2 tw-text-sm">
                             <li>
@@ -52,7 +51,7 @@ export const QASettings: React.FC = () => {
                                 <strong className="tw-inline-block tw-whitespace-nowrap">
                                   NEVER:
                                 </strong>
-                                <span>Manual indexing via command or refresh only</span>
+                                <span>{t("settings.autoIndexNever")}</span>
                               </div>
                             </li>
                             <li>
@@ -60,7 +59,7 @@ export const QASettings: React.FC = () => {
                                 <strong className="tw-inline-block tw-whitespace-nowrap">
                                   ON STARTUP:
                                 </strong>
-                                <span>Index updates when plugin loads or reloads</span>
+                                <span>{t("settings.autoIndexOnStartup")}</span>
                               </div>
                             </li>
                             <li>
@@ -68,13 +67,13 @@ export const QASettings: React.FC = () => {
                                 <strong className="tw-inline-block tw-whitespace-nowrap">
                                   ON MODE SWITCH:
                                 </strong>
-                                <span>Updates when entering QA mode (Recommended)</span>
+                                <span>{t("settings.autoIndexOnModeSwitch")}</span>
                               </div>
                             </li>
                           </ul>
                         </div>
                         <p className="tw-text-sm tw-text-callout-warning">
-                          Warning: Cost implications for large vaults with paid models
+                          {t("settings.autoIndexWarning")}
                         </p>
                       </div>
                     </TooltipContent>
@@ -90,14 +89,14 @@ export const QASettings: React.FC = () => {
               label: strategy,
               value: strategy,
             }))}
-            placeholder="Strategy"
+            placeholder={t("settings.strategy")}
           />
 
           {/* Max Sources */}
           <SettingItem
             type="slider"
-            title="Max Sources"
-            description="Copilot goes through your vault to find relevant blocks and passes the top N blocks to the LLM. Default for N is 3. Increase if you want more sources included in the answer generation step."
+            title={t("settings.maxSources")}
+            description={t("settings.maxSourcesDesc")}
             min={1}
             max={128}
             step={1}
@@ -108,8 +107,8 @@ export const QASettings: React.FC = () => {
           {/* Requests per Minute */}
           <SettingItem
             type="slider"
-            title="Requests per Minute"
-            description="Default is 90. Decrease if you are rate limited by your embedding provider."
+            title={t("settings.requestsPerMinute")}
+            description={t("settings.requestsPerMinuteDesc")}
             min={10}
             max={300}
             step={10}
@@ -120,8 +119,8 @@ export const QASettings: React.FC = () => {
           {/* Embedding batch size */}
           <SettingItem
             type="slider"
-            title="Embedding Batch Size"
-            description="Default is 16. Increase if you are rate limited by your embedding provider."
+            title={t("settings.embeddingBatchSize")}
+            description={t("settings.embeddingBatchSizeDesc")}
             min={1}
             max={128}
             step={1}
@@ -132,8 +131,8 @@ export const QASettings: React.FC = () => {
           {/* Number of Partitions */}
           <SettingItem
             type="select"
-            title="Number of Partitions"
-            description="Number of partitions for Copilot index. Default is 1. Increase if you have issues indexing large vaults. Warning: Changes require clearing and rebuilding the index!"
+            title={t("settings.numPartitions")}
+            description={t("settings.numPartitionsDesc")}
             value={settings.numPartitions.toString()}
             onChange={handlePartitionsChange}
             options={[
@@ -162,13 +161,10 @@ export const QASettings: React.FC = () => {
           {/* Exclusions */}
           <SettingItem
             type="custom"
-            title="Exclusions"
+            title={t("settings.exclusions")}
             description={
               <>
-                <p>
-                  Exclude folders, tags, note titles or file extensions from being indexed.
-                  Previously indexed files will remain until a force re-index is performed.
-                </p>
+                <p>{t("settings.exclusionsDesc")}</p>
               </>
             }
           >
@@ -183,21 +179,15 @@ export const QASettings: React.FC = () => {
                 ).open()
               }
             >
-              Manage
+              {t("settings.manage")}
             </Button>
           </SettingItem>
 
           {/* Inclusions */}
           <SettingItem
             type="custom"
-            title="Inclusions"
-            description={
-              <p>
-                Index only the specified paths, tags, or note titles. Exclusions take precedence
-                over inclusions. Previously indexed files will remain until a force re-index is
-                performed.
-              </p>
-            }
+            title={t("settings.inclusions")}
+            description={<p>{t("settings.inclusionsDesc")}</p>}
           >
             <Button
               variant="secondary"
@@ -210,15 +200,15 @@ export const QASettings: React.FC = () => {
                 ).open()
               }
             >
-              Manage
+              {t("settings.manage")}
             </Button>
           </SettingItem>
 
           {/* Enable Obsidian Sync */}
           <SettingItem
             type="switch"
-            title="Enable Obsidian Sync for Copilot index"
-            description="If enabled, the index will be stored in the .obsidian folder and synced with Obsidian Sync by default. If disabled, it will be stored in .copilot-index folder at vault root."
+            title={t("settings.enableObsidianSync")}
+            description={t("settings.enableObsidianSyncDesc")}
             checked={settings.enableIndexSync}
             onCheckedChange={(checked) => updateSetting("enableIndexSync", checked)}
           />
@@ -226,8 +216,8 @@ export const QASettings: React.FC = () => {
           {/* Disable index loading on mobile */}
           <SettingItem
             type="switch"
-            title="Disable index loading on mobile"
-            description="When enabled, Copilot index won't be loaded on mobile devices to save resources. Only chat mode will be available. Any existing index from desktop sync will be preserved. Uncheck to enable QA modes on mobile."
+            title={t("settings.disableIndexOnMobile")}
+            description={t("settings.disableIndexOnMobileDesc")}
             checked={settings.disableIndexOnMobile}
             onCheckedChange={(checked) => updateSetting("disableIndexOnMobile", checked)}
           />

@@ -1,112 +1,81 @@
 import { InlineEditCommandSettings } from "@/settings/model";
+import { t } from "@/i18n";
 
 export const SELECTED_TEXT_PLACEHOLDER = "{copilot-selection}";
 export const COMMAND_NAME_MAX_LENGTH = 50;
 
-export const DEFAULT_INLINE_EDIT_COMMANDS: InlineEditCommandSettings[] = [
+export const getDefaultInlineEditCommands = (): InlineEditCommandSettings[] => [
   {
-    name: "Fix grammar and spelling",
-    prompt: `Fix the grammar and spelling of {}. Preserve all formatting, line breaks, and special characters. Do not add or remove any content. Return only the corrected text.`,
+    name: t("commands.defaults.fixGrammar.name"),
+    prompt: t("commands.defaults.fixGrammar.prompt"),
     showInContextMenu: true,
   },
   {
-    name: "Translate to Chinese",
-    prompt: `Translate {} into Chinese:
-    1. Preserve the meaning and tone
-    2. Maintain appropriate cultural context
-    3. Keep formatting and structure
-    Return only the translated text.`,
+    name: t("commands.defaults.translateToChinese.name"),
+    prompt: t("commands.defaults.translateToChinese.prompt"),
     showInContextMenu: true,
   },
   {
-    name: "Summarize",
-    prompt: `Create a bullet-point summary of {}. Each bullet point should capture a key point. Return only the bullet-point summary.`,
+    name: t("commands.defaults.summarize.name"),
+    prompt: t("commands.defaults.summarize.prompt"),
     showInContextMenu: true,
   },
   {
-    name: "Simplify",
-    prompt: `Simplify {} to a 6th-grade reading level (ages 11-12). Use simple sentences, common words, and clear explanations. Maintain the original key concepts. Return only the simplified text.`,
+    name: t("commands.defaults.simplify.name"),
+    prompt: t("commands.defaults.simplify.prompt"),
     showInContextMenu: true,
   },
   {
-    name: "Emojify",
-    prompt: `Add relevant emojis to enhance {}. Follow these rules:
-    1. Insert emojis at natural breaks in the text
-    2. Never place two emojis next to each other
-    3. Keep all original text unchanged
-    4. Choose emojis that match the context and tone
-    Return only the emojified text.`,
+    name: t("commands.defaults.emojify.name"),
+    prompt: t("commands.defaults.emojify.prompt"),
     showInContextMenu: true,
   },
   {
-    name: "Make shorter",
-    prompt: `Reduce {} to half its length while preserving these elements:
-    1. Main ideas and key points
-    2. Essential details
-    3. Original tone and style
-    Return only the shortened text.`,
+    name: t("commands.defaults.makeShorter.name"),
+    prompt: t("commands.defaults.makeShorter.prompt"),
     showInContextMenu: true,
   },
   {
-    name: "Make longer",
-    prompt: `Expand {} to twice its length by:
-    1. Adding relevant details and examples
-    2. Elaborating on key points
-    3. Maintaining the original tone and style
-    Return only the expanded text.`,
+    name: t("commands.defaults.makeLonger.name"),
+    prompt: t("commands.defaults.makeLonger.prompt"),
     showInContextMenu: true,
   },
   {
-    name: "Generate table of contents",
-    prompt: `Generate a hierarchical table of contents for {}. Use appropriate heading levels (H1, H2, H3, etc.). Include page numbers if present. Return only the table of contents.`,
+    name: t("commands.defaults.generateToc.name"),
+    prompt: t("commands.defaults.generateToc.prompt"),
     showInContextMenu: false,
   },
   {
-    name: "Generate glossary",
-    prompt: `Create a glossary of important terms, concepts, and phrases from {}. Format each entry as "Term: Definition". Sort entries alphabetically. Return only the glossary.`,
+    name: t("commands.defaults.generateGlossary.name"),
+    prompt: t("commands.defaults.generateGlossary.prompt"),
     showInContextMenu: false,
   },
   {
-    name: "Remove URLs",
-    prompt: `Remove all URLs from {}. Preserve all other content and formatting. URLs may be in various formats (http, https, www). Return only the text with URLs removed.`,
+    name: t("commands.defaults.removeUrls.name"),
+    prompt: t("commands.defaults.removeUrls.prompt"),
     showInContextMenu: false,
   },
   {
-    name: "Rewrite as tweet",
-    prompt: `Rewrite {} as a single tweet with these requirements:
-    1. Maximum 280 characters
-    2. Use concise, impactful language
-    3. Maintain the core message
-    Return only the tweet text.`,
+    name: t("commands.defaults.rewriteAsTweet.name"),
+    prompt: t("commands.defaults.rewriteAsTweet.prompt"),
     showInContextMenu: false,
   },
   {
-    name: "Rewrite as tweet thread",
-    prompt: `Convert {} into a Twitter thread following these rules:
-    1. Each tweet must be under 240 characters
-    2. Start with "THREAD START" on its own line
-    3. Separate tweets with "\n\n---\n\n"
-    4. End with "THREAD END" on its own line
-    5. Make content engaging and clear
-    Return only the formatted thread.`,
+    name: t("commands.defaults.rewriteAsThread.name"),
+    prompt: t("commands.defaults.rewriteAsThread.prompt"),
     showInContextMenu: false,
   },
   {
-    name: "Explain like I am 5",
-    prompt: `Explain {} in simple terms that a 5-year-old would understand:
-    1. Use basic vocabulary
-    2. Include simple analogies
-    3. Break down complex concepts
-    Return only the simplified explanation.`,
+    name: t("commands.defaults.explainLikeChild.name"),
+    prompt: t("commands.defaults.explainLikeChild.prompt"),
     showInContextMenu: false,
   },
   {
-    name: "Rewrite as press release",
-    prompt: `Transform {} into a professional press release:
-    1. Use formal, journalistic style
-    2. Include headline and dateline
-    3. Follow inverted pyramid structure
-    Return only the press release format.`,
+    name: t("commands.defaults.rewriteAsPressRelease.name"),
+    prompt: t("commands.defaults.rewriteAsPressRelease.prompt"),
     showInContextMenu: false,
   },
 ];
+
+// 保持向后兼容性的常量
+export const DEFAULT_INLINE_EDIT_COMMANDS = getDefaultInlineEditCommands();
