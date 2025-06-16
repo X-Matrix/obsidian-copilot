@@ -124,6 +124,10 @@ const webSearchTool = tool(
       const standaloneQuestion = await getStandaloneQuestion(query, chatHistory);
 
       const response = await BrevilabsClient.getInstance().webSearch(standaloneQuestion);
+      console.log(
+        `Web search response for query "${standaloneQuestion}":`,
+        JSON.stringify(response, null, 2)
+      );
       const citations = response.response.citations || [];
       const citationsList =
         citations.length > 0

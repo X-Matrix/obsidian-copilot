@@ -288,6 +288,7 @@ export class HybridRetriever extends BaseRetriever {
         mtime: { between: [startTime, endTime] },
       };
 
+      console.log("==== Time Interval Search Params: ====\n", searchParams);
       const timeIntervalResults = await search(db, searchParams);
 
       // Convert timeIntervalResults to Document objects

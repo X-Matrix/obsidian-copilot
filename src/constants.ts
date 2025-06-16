@@ -662,6 +662,7 @@ export const DEFAULT_SETTINGS: CopilotSettings = {
   passMarkdownImages: true,
   enableCustomPromptTemplating: true,
   language: "en",
+  useLocalIntentAnalyzer: true,
 };
 
 export const EVENT_NAMES = {

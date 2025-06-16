@@ -106,6 +106,7 @@ export interface CopilotSettings {
   passMarkdownImages: boolean;
   enableCustomPromptTemplating: boolean;
   language: string;
+  useLocalIntentAnalyzer: boolean;
 }
 
 export const settingsStore = createStore();
