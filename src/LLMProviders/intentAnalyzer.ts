@@ -11,9 +11,11 @@ import { simpleYoutubeTranscriptionTool } from "@/tools/YoutubeTools";
 import { ToolManager } from "@/tools/toolManager";
 import { extractChatHistory, extractYoutubeUrl } from "@/utils";
 import { BrevilabsClient } from "./brevilabsClient";
+import { LocalIntentAnalyzer } from "./localIntentAnalyzer";
 import { Vault } from "obsidian";
 import ProjectManager from "@/LLMProviders/projectManager";
 import { isProjectMode } from "@/aiParams";
+import { getSettings } from "@/settings/model";
 
 // TODO: Add @index with explicit pdf files in chat context menu
 export const COPILOT_TOOL_NAMES = ["@vault", "@composer", "@web", "@youtube", "@pomodoro"];
@@ -44,14 +46,26 @@ export class IntentAnalyzer {
 
   static async analyzeIntent(originalMessage: string): Promise<ToolCall[]> {
     try {
-      const brocaResponse = await BrevilabsClient.getInstance().broca(
-        originalMessage,
-        isProjectMode()
-      );
+      // Use local intent analyzer instead of broca API
+      const useLocalAnalyzer = getSettings().useLocalIntentAnalyzer || true;
+
+      let brocaResponse;
+      if (useLocalAnalyzer) {
+        brocaResponse = await LocalIntentAnalyzer.getInstance().analyzeIntent(
+          originalMessage,
+          isProjectMode(),
+          this.tools // Pass the tools array to local analyzer
+        );
+      } else {
+        brocaResponse = await BrevilabsClient.getInstance().broca(originalMessage, isProjectMode());
+      }
 
       // Check if the response is successful and has the expected structure
       if (!brocaResponse?.response) {
-        throw new Error(brocaResponse?.detail || "Broca API call failed");
+        const errorMessage = useLocalAnalyzer
+          ? "Local intent analysis failed"
+          : (brocaResponse as any)?.detail || "Intent analysis failed";
+        throw new Error(errorMessage);
       }
 
       const brocaToolCalls = brocaResponse.response.tool_calls;

@@ -10,7 +10,6 @@ import { BUILTIN_CHAT_MODELS, USER_SENDER } from "@/constants";
 import {
   ChainRunner,
   CopilotPlusChainRunner,
-  LLMChainRunner,
   ProjectChainRunner,
   VaultQAChainRunner,
 } from "@/LLMProviders/chainRunner";
@@ -266,7 +265,8 @@ export default class ChainManager {
     const chainType = getChainType();
     switch (chainType) {
       case ChainType.LLM_CHAIN:
-        return new LLMChainRunner(this);
+        //return new LLMChainRunner(this);
+        return new CopilotPlusChainRunner(this);
       case ChainType.VAULT_QA_CHAIN:
         return new VaultQAChainRunner(this);
       case ChainType.COPILOT_PLUS_CHAIN:
