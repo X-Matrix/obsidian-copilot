@@ -128,17 +128,28 @@ const webSearchTool = tool(
         `Web search response for query "${standaloneQuestion}":`,
         JSON.stringify(response, null, 2)
       );
-      const citations = response.response.citations || [];
-      const citationsList =
-        citations.length > 0
-          ? "\n\nSources:\n" + citations.map((url, index) => `[${index + 1}] ${url}`).join("\n")
-          : "";
 
-      return (
-        "Here are the web search results. Please provide a response based on this information and include source citations listed at the end of your response under the heading '#### Sources' as a list of markdown links. For each URL, create a descriptive title based on the domain and path and return it in the markdown format '- [title](url)':\n\n" +
-        response.response.choices[0].message.content +
-        citationsList
-      );
+      // 检查是否使用本地搜索（响应中没有citations说明是本地搜索）
+      const isLocalSearch =
+        !response.response.citations || response.response.citations.length === 0;
+
+      if (isLocalSearch) {
+        // 本地搜索的结果已经格式化好了
+        return response.response.choices[0].message.content;
+      } else {
+        // 远程搜索需要添加引用
+        const citations = response.response.citations || [];
+        const citationsList =
+          citations.length > 0
+            ? "\n\nSources:\n" + citations.map((url, index) => `[${index + 1}] ${url}`).join("\n")
+            : "";
+
+        return (
+          "Here are the web search results. Please provide a response based on this information and include source citations listed at the end of your response under the heading '#### Sources' as a list of markdown links. For each URL, create a descriptive title based on the domain and path and return it in the markdown format '- [title](url)':\n\n" +
+          response.response.choices[0].message.content +
+          citationsList
+        );
+      }
     } catch (error) {
       console.error(`Error processing web search query ${query}:`, error);
       return "";

@@ -107,6 +107,8 @@ export interface CopilotSettings {
   enableCustomPromptTemplating: boolean;
   language: string;
   useLocalIntentAnalyzer: boolean;
+  useLocalWebSearch: boolean;
+  useLocalUrlProcessing: boolean;
 }
 
 export const settingsStore = createStore();

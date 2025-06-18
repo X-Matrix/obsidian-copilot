@@ -1,6 +1,8 @@
 import { ImageProcessor } from "@/imageProcessing/imageProcessor";
 import { BrevilabsClient, Url4llmResponse } from "@/LLMProviders/brevilabsClient";
+import { LocalUrl4llmResponse } from "@/tools/LocalUrl4llmTool";
 import { isYoutubeUrl } from "@/utils";
+import { getSettings } from "@/settings/model";
 
 export interface MentionData {
   type: string;
@@ -41,9 +43,13 @@ export class Mention {
       .filter((url) => !isYoutubeUrl(url));
   }
 
-  async processUrl(url: string): Promise<Url4llmResponse> {
+  async processUrl(url: string): Promise<Url4llmResponse | LocalUrl4llmResponse> {
     try {
-      return await this.brevilabsClient.url4llm(url);
+      const settings = getSettings();
+      // Use local processing if configured, defaulting to false
+      const useLocalProcessing = settings.useLocalUrlProcessing || false;
+
+      return await this.brevilabsClient.enhancedUrl4llm(url, useLocalProcessing);
     } catch (error) {
       console.error(`Error processing URL ${url}:`, error);
       return { response: url, elapsed_time_ms: 0 };
@@ -71,10 +77,12 @@ export class Mention {
 
       if (!this.mentions.has(url)) {
         const processed = await this.processUrl(url);
+        const processedContent = "content" in processed ? processed.content : processed.response;
+
         this.mentions.set(url, {
           type: "url",
           original: url,
-          processed: processed.response,
+          processed: processedContent,
         });
       }
       return this.mentions.get(url);

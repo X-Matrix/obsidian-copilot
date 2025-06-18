@@ -3,8 +3,8 @@ import { AcceptKeyOption } from "@/autocomplete/codemirrorIntegration";
 import { DEFAULT_INLINE_EDIT_COMMANDS } from "@/commands/constants";
 import { type CopilotSettings } from "@/settings/model";
 import { v4 as uuidv4 } from "uuid";
-import { ChainType } from "./chainFactory";
-import { PromptSortStrategy } from "./types";
+import { ChainType } from "@/chainFactory";
+import { PromptSortStrategy } from "@/types";
 
 export const BREVILABS_API_BASE_URL = "https://api.brevilabs.com/v1";
 export const CHAT_VIEWTYPE = "copilot-chat-view";

@@ -183,7 +183,7 @@ const Chat: React.FC<ChatProps> = ({
 
     // Extract Mentions (such as URLs) from original input message only if using Copilot Plus chain
     const urlContextAddition =
-      currentChain === ChainType.COPILOT_PLUS_CHAIN
+      currentChain === ChainType.COPILOT_PLUS_CHAIN || currentChain === ChainType.LLM_CHAIN
         ? await mention.processUrls(inputMessage || "")
         : { urlContext: "", imageUrls: [] };
 

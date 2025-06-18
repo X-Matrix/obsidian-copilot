@@ -516,6 +516,10 @@ class CopilotPlusChainRunner extends BaseChainRunner {
     const enhancedUserMessage = content instanceof Array ? (content[0] as any).text : content;
     logInfo("Enhanced user message: ", enhancedUserMessage);
     logInfo("==== Final Request to AI ====\n", messages);
+
+    // 将 enhancedUserMessage 写入当前 vault 的文档中
+    await this.writeToVaultFile(enhancedUserMessage);
+
     const streamer = new ThinkBlockStreamer(updateCurrentAiMessage);
 
     // Wrap the stream call with warning suppression
@@ -803,6 +807,34 @@ class CopilotPlusChainRunner extends BaseChainRunner {
 
   protected async getSystemPrompt(): Promise<string> {
     return getSystemPrompt();
+  }
+
+  private async writeToVaultFile(content: string): Promise<void> {
+    try {
+      const vault = this.chainManager.app.vault;
+      const fileName = `copilot-enhanced-message-${Date.now()}.md`;
+      const filePath = `Copilot Logs/${fileName}`;
+
+      // 确保目录存在
+      const folderPath = "Copilot Logs";
+      const folder = vault.getAbstractFileByPath(folderPath);
+      if (!folder) {
+        await vault.createFolder(folderPath);
+      }
+
+      // 格式化内容
+      const formattedContent = `# Enhanced User Message
+Created: 2033-10-01
+
+${content}
+`;
+
+      // 创建文件
+      await vault.create(filePath, formattedContent);
+      logInfo(`Enhanced user message saved to: ${filePath}`);
+    } catch (error) {
+      console.error("Failed to write enhanced user message to vault:", error);
+    }
   }
 }
 
