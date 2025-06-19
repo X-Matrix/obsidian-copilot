@@ -1,7 +1,3 @@
-import * as fs from "fs";
-import * as path from "path";
-import { logInfo, logWarn, logError } from "@/logger";
-
 export interface LocalWebSearchResult {
   title: string;
   url: string;
@@ -33,8 +29,8 @@ export class LocalWebSearchTool {
 
     try {
       // 检查Node.js环境
-      if (typeof process === "undefined" || !process.versions || !process.versions.node) {
-        logWarn("Node.js environment not available");
+      if (typeof require === "undefined") {
+        console.warn("Node.js require function not available");
         this.isSupported = false;
         return false;
       }
@@ -42,7 +38,7 @@ export class LocalWebSearchTool {
       // 检查是否在Electron环境中
       const isElectron =
         typeof process !== "undefined" && process.versions && process.versions.electron;
-      logInfo("Environment check:", {
+      console.log("Environment check:", {
         isElectron,
         processVersions: process?.versions,
         nodeVersion: process?.version,
@@ -51,16 +47,19 @@ export class LocalWebSearchTool {
       });
 
       if (!isElectron) {
-        logWarn("Local web search requires Electron environment");
+        console.warn("Local web search requires Electron environment");
         this.isSupported = false;
         return false;
       }
 
       // 检查playwright是否在package.json中安装
       try {
+        const path = require("path");
+        const fs = require("fs");
+
         // 获取当前工作目录和可能的插件路径
         const cwd = process.cwd();
-        logInfo("Current working directory:", cwd);
+        console.log("Current working directory:", cwd);
 
         // 尝试多个可能的插件根目录
         const possibleRoots = [
@@ -81,81 +80,91 @@ export class LocalWebSearchTool {
           const packageJsonPath = path.join(root, "package.json");
           const playwrightModulePath = path.join(root, "node_modules/playwright");
 
-          logInfo(`Checking root: ${root}`);
-          logInfo(`Package.json exists: ${fs.existsSync(packageJsonPath)}`);
-          logInfo(`Playwright module exists: ${fs.existsSync(playwrightModulePath)}`);
+          console.log(`Checking root: ${root}`);
+          console.log(`Package.json exists: ${fs.existsSync(packageJsonPath)}`);
+          console.log(`Playwright module exists: ${fs.existsSync(playwrightModulePath)}`);
 
           if (fs.existsSync(packageJsonPath) && fs.existsSync(playwrightModulePath)) {
             playwrightExists = true;
-            logInfo(`Found plugin root with playwright: ${root}`);
+            console.log(`Found plugin root with playwright: ${root}`);
             break;
           }
         }
 
         if (!playwrightExists) {
-          logWarn("Playwright module not found in any expected location");
-          logWarn("Please ensure playwright is installed in the plugin directory:");
-          logWarn(
+          console.warn("Playwright module not found in any expected location");
+          console.warn("Please ensure playwright is installed in the plugin directory:");
+          console.warn(
             "cd /Users/xmatrix/Documents/fun_project/obsidian-copilot && npm install playwright"
           );
         }
       } catch (fsError) {
-        logError("File system check failed:", fsError);
+        console.error("File system check failed:", fsError);
       }
 
       // 尝试导入playwright并检查可用的浏览器
-      logInfo("Attempting to import playwright...");
+      console.log("Attempting to import playwright...");
 
-      // 使用动态导入替换require
+      // 使用require作为备用方案
       let playwrightModule;
       try {
         playwrightModule = await import("playwright");
       } catch (importError) {
-        logInfo("Dynamic import failed, trying alternative path:", importError.message);
+        console.log("Dynamic import failed, trying require:", importError.message);
         try {
-          // 使用动态导入替代require
-          const devPlaywrightPath =
-            "/Users/xmatrix/Documents/fun_project/obsidian-copilot/node_modules/playwright";
-          logInfo("Trying development path import:", devPlaywrightPath);
-          playwrightModule = await import(/* webpackIgnore: true */ devPlaywrightPath);
-        } catch (directError) {
-          logError("Development path import failed:", directError.message);
-          throw new Error("Playwright module not found. Please install: npm install playwright");
+          playwrightModule = require("playwright");
+        } catch (requireError) {
+          console.error("Both import and require failed:", {
+            importError: importError.message,
+            requireError: requireError.message,
+          });
+
+          // 尝试从开发目录直接导入
+          try {
+            const devPlaywrightPath =
+              "/Users/xmatrix/Documents/fun_project/obsidian-copilot/node_modules/playwright";
+            console.log("Trying development path import:", devPlaywrightPath);
+            playwrightModule = require(devPlaywrightPath);
+          } catch (directError) {
+            console.error("Development path import failed:", directError.message);
+            throw new Error("Playwright module not found. Please install: npm install playwright");
+          }
         }
       }
 
       this.playwrightModule = playwrightModule;
-      logInfo("Playwright imported successfully");
+      console.log("Playwright imported successfully");
 
       // 检查chromium是否可用
       try {
         const { chromium } = this.playwrightModule;
-        logInfo("Checking chromium availability...");
+        console.log("Checking chromium availability...");
 
         // 尝试获取chromium可执行文件路径
         const executablePath = chromium.executablePath();
-        logInfo("Chromium executable path:", executablePath);
+        console.log("Chromium executable path:", executablePath);
 
         // 检查文件是否存在
+        const fs = require("fs");
         const chromiumExists = fs.existsSync(executablePath);
-        logInfo("Chromium exists:", chromiumExists);
+        console.log("Chromium exists:", chromiumExists);
 
         if (!chromiumExists) {
-          logWarn("Chromium not found. Please run: npx playwright install chromium");
+          console.warn("Chromium not found. Please run: npx playwright install chromium");
           this.isSupported = false;
           return false;
         }
       } catch (chromiumError) {
-        logError("Chromium check failed:", chromiumError);
+        console.error("Chromium check failed:", chromiumError);
         this.isSupported = false;
         return false;
       }
 
       this.isSupported = true;
-      logInfo("Playwright environment check passed");
+      console.log("Playwright environment check passed");
       return true;
     } catch (error) {
-      logError("Playwright environment check failed:", {
+      console.error("Playwright environment check failed:", {
         message: error.message,
         stack: error.stack,
         name: error.name,
@@ -166,9 +175,11 @@ export class LocalWebSearchTool {
         error.message.includes("Cannot resolve module") ||
         error.message.includes("Failed to resolve module")
       ) {
-        logWarn("Playwright module not found. This feature requires playwright to be installed.");
+        console.warn(
+          "Playwright module not found. This feature requires playwright to be installed."
+        );
       } else if (error.message.includes("ENOENT")) {
-        logWarn("Playwright browsers not installed. Run: npx playwright install");
+        console.warn("Playwright browsers not installed. Run: npx playwright install");
       }
 
       this.isSupported = false;
@@ -194,8 +205,8 @@ export class LocalWebSearchTool {
     if (!this.browser) {
       const playwright = await this.initPlaywright();
       try {
-        logInfo("Playwright module structure:", Object.keys(playwright));
-        logInfo("Chromium object:", typeof playwright.chromium);
+        console.log("Playwright module structure:", Object.keys(playwright));
+        console.log("Chromium object:", typeof playwright.chromium);
 
         if (!playwright.chromium) {
           throw new Error("Chromium browser not available in playwright module");
@@ -221,9 +232,9 @@ export class LocalWebSearchTool {
           ],
         });
 
-        logInfo("Browser launched successfully");
+        console.log("Browser launched successfully");
       } catch (error) {
-        logError("Browser launch error:", error);
+        console.error("Browser launch error:", error);
         throw new Error(
           `无法启动浏览器: ${error.message}。请确保已安装Chromium: npx playwright install chromium`
         );
@@ -239,10 +250,10 @@ export class LocalWebSearchTool {
 
       try {
         // 检查page对象的API
-        logInfo("Page object methods:", Object.getOwnPropertyNames(page.__proto__));
-        logInfo("Has setUserAgent:", typeof page.setUserAgent);
-        logInfo("Has goto:", typeof page.goto);
-        logInfo("Has waitForSelector:", typeof page.waitForSelector);
+        console.log("Page object methods:", Object.getOwnPropertyNames(page.__proto__));
+        console.log("Has setUserAgent:", typeof page.setUserAgent);
+        console.log("Has goto:", typeof page.goto);
+        console.log("Has waitForSelector:", typeof page.waitForSelector);
 
         // 尝试不同的用户代理设置方法
         try {
@@ -256,20 +267,20 @@ export class LocalWebSearchTool {
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             });
           } else {
-            logWarn("Neither setUserAgent nor setExtraHTTPHeaders available");
+            console.warn("Neither setUserAgent nor setExtraHTTPHeaders available");
           }
         } catch (uaError) {
-          logWarn("Failed to set user agent:", uaError.message);
+          console.warn("Failed to set user agent:", uaError.message);
         }
 
         // 使用Google搜索
         const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&num=${maxResults}&hl=en`;
-        logInfo("Navigating to:", searchUrl);
+        console.log("Navigating to:", searchUrl);
 
         await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
 
         // 等待页面加载并尝试多个可能的选择器
-        logInfo("Waiting for page to load...");
+        console.log("Waiting for page to load...");
 
         // 先等待一下让页面有时间渲染
         await page.waitForTimeout(2000);
@@ -282,10 +293,10 @@ export class LocalWebSearchTool {
           try {
             await page.waitForSelector(selector, { timeout: 3000 });
             searchContainer = selector;
-            logInfo(`Found search container with selector: ${selector}`);
+            console.log(`Found search container with selector: ${selector}`);
             break;
           } catch {
-            logInfo(`Selector ${selector} not found, trying next...`);
+            console.log(`Selector ${selector} not found, trying next...`);
           }
         }
 
@@ -295,11 +306,11 @@ export class LocalWebSearchTool {
           const pageTitle = await page.title();
           const pageUrl = page.url();
 
-          logInfo("=== 页面调试信息 ===");
-          logInfo("Page title:", pageTitle);
-          logInfo("Page URL:", pageUrl);
-          logInfo("Page content length:", pageContent.length);
-          logInfo("Page content preview (first 1000 chars):", pageContent.substring(0, 1000));
+          console.log("=== 页面调试信息 ===");
+          console.log("Page title:", pageTitle);
+          console.log("Page URL:", pageUrl);
+          console.log("Page content length:", pageContent.length);
+          console.log("Page content preview (first 1000 chars):", pageContent.substring(0, 1000));
 
           // 检查页面中是否有特定的元素
           const hasSearchResults = await page.evaluate(() => {
@@ -324,7 +335,7 @@ export class LocalWebSearchTool {
             return elements;
           });
 
-          logInfo("Page element analysis:", hasSearchResults);
+          console.log("Page element analysis:", hasSearchResults);
 
           // 检测是否被Google反爬虫机制阻止
           if (
@@ -332,17 +343,17 @@ export class LocalWebSearchTool {
             hasSearchResults.hasUnusualTraffic ||
             hasSearchResults.hasCaptchaForm
           ) {
-            logWarn("Detected Google anti-bot protection");
+            console.warn("Detected Google anti-bot protection");
             throw new Error("被Google反爬虫机制阻止，需要人工验证。建议使用远程搜索或稍后重试。");
           }
 
           // 截图保存（如果可能）
           try {
             const screenshot = await page.screenshot({ type: "png" });
-            logInfo("Screenshot captured, size:", screenshot.length, "bytes");
+            console.log("Screenshot captured, size:", screenshot.length, "bytes");
             // 这里可以保存截图到文件或转换为base64
           } catch (screenshotError) {
-            logWarn("Failed to capture screenshot:", screenshotError.message);
+            console.log("Failed to capture screenshot:", screenshotError.message);
           }
 
           throw new Error("未找到搜索结果容器，可能被Google阻止或页面结构改变");
@@ -364,7 +375,7 @@ export class LocalWebSearchTool {
           return analysis;
         });
 
-        logInfo("Page analysis before extraction:", pageAnalysis);
+        console.log("Page analysis before extraction:", pageAnalysis);
 
         // 提取搜索结果
         const results = await page.evaluate((containerSelector: string) => {
@@ -422,14 +433,14 @@ export class LocalWebSearchTool {
                 }
               }
             } catch (error) {
-              logError("Error extracting search result:", error);
+              console.error("Error extracting search result:", error);
             }
           });
 
           return searchResults;
         }, searchContainer);
 
-        logInfo(`Found ${results.length} search results`);
+        console.log(`Found ${results.length} search results`);
 
         return {
           results: results.slice(0, maxResults),
@@ -439,7 +450,7 @@ export class LocalWebSearchTool {
         await page.close();
       }
     } catch (error) {
-      logError("Error performing local web search:", error);
+      console.error("Error performing local web search:", error);
 
       // 提供更详细的错误信息
       if (error.message.includes("Timeout") || error.message.includes("waitForSelector")) {
@@ -460,9 +471,6 @@ export class LocalWebSearchTool {
 
   async searchAndExtractContent(query: string, maxResults: number = 5): Promise<string> {
     try {
-      // 删除未使用的 fetch 导入，如果后续有需要再添加回来
-      // const { default: fetch } = await import("node-fetch");
-
       // 首先检查是否支持本地搜索
       const isSupported = await this.isLocalSearchSupported();
       if (!isSupported) {
@@ -515,7 +523,7 @@ export class LocalWebSearchTool {
 
       return content;
     } catch (error) {
-      logError("Local web search error:", error);
+      console.error("Local web search error:", error);
 
       // 根据错误类型提供不同的用户友好消息
       if (error.message.includes("playwright") || error.message.includes("Playwright")) {
@@ -560,7 +568,7 @@ export class LocalWebSearchTool {
       try {
         await this.browser.close();
       } catch (error) {
-        logError("Error closing browser:", error);
+        console.error("Error closing browser:", error);
       }
       this.browser = null;
     }

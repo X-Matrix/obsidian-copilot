@@ -3,3 +3,5 @@ node_modules/
 main.js
 /src/tools/LocalUrl4llmTool.ts
 /src/encryptionService.ts
+src/tools/LocalWebSearchTool.ts
+src/tools/WebContentRules.ts

@@ -1,7 +1,7 @@
 import { ReadabilityRule, BaseReadabilityRule } from "./BaseReadabilityRule";
-// import { GithubRule } from './rules/GithubRule';
+import { GithubRule } from "./rules/GithubRule";
 import { AcademicRule } from "./rules/AcademicRule";
-// import { NewsRule } from './rules/NewsRule';
+import { NewsRule } from "./rules/NewsRule";
 import { SpaceACRule } from "./rules/SpaceACRule";
 import { RuleExtractor, RuleConfig } from "./RuleExtractor";
 
@@ -25,28 +25,28 @@ export class ReadabilityRuleManager {
   private loadBuiltinRules(): void {
     this.rules = [
       new SpaceACRule(), // 优先级最高，放在最前面
-      //new GithubRule(),
-      //new AcademicRule(),
-      //new NewsRule(),
+      new GithubRule(),
+      new AcademicRule(),
+      new NewsRule(),
       // 可以在这里添加更多内置规则
     ];
   }
 
   // 根据URL选择最合适的规则
   selectRule(url: string): ReadabilityRule {
-    console.log(`Selecting rule for URL: ${url}`);
+    console.warn(`Selecting rule for URL: ${url}`);
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname.toLowerCase();
-      console.log(`Parsed hostname: ${hostname}`);
+      console.warn(`Parsed hostname: ${hostname}`);
 
       for (const rule of this.rules) {
-        console.log(`Checking rule: ${rule.name}, patterns: ${rule.domainPatterns}`);
+        console.warn(`Checking rule: ${rule.name}, patterns: ${rule.domainPatterns}`);
         if (rule.domainPatterns && rule.domainPatterns.length > 0) {
           for (const pattern of rule.domainPatterns) {
-            console.log(`Comparing ${hostname} with pattern: ${pattern}`);
+            console.warn(`Comparing ${hostname} with pattern: ${pattern}`);
             if (this.matchesDomainPattern(hostname, pattern)) {
-              console.log(`Selected rule: ${rule.name} for domain: ${hostname} (URL: ${url})`);
+              console.warn(`Selected rule: ${rule.name} for domain: ${hostname} (URL: ${url})`);
               return rule;
             }
           }
@@ -56,7 +56,7 @@ export class ReadabilityRuleManager {
       console.warn("Failed to parse URL for rule selection:", error);
     }
 
-    console.log(`No specific rule found, using default rule for: ${url}`);
+    console.warn(`No specific rule found, using default rule for: ${url}`);
     return this.defaultRule;
   }
 
@@ -86,41 +86,29 @@ export class ReadabilityRuleManager {
     url: string
   ): { title: string; content: string; success: boolean } {
     const rule = this.selectRule(url);
-    console.log(`Using rule: ${rule.name} for content extraction`);
-    console.log("Rule details:", {
+    console.warn(`Using rule: ${rule.name} for content extraction`);
+    console.warn("Rule details:", {
       name: rule.name,
       type: rule.constructor.name,
       isAcademic: rule instanceof AcademicRule,
     });
 
-    if (rule instanceof AcademicRule) {
-      console.warn("ACADEMIC RULE SELECTED - VERIFYING EXECUTION");
-    }
-
-    if (rule instanceof SpaceACRule) {
-      console.warn("SPACEAC RULE SELECTED - VERIFYING EXECUTION");
-      // 记录一些相关信息
-      try {
-        const mathScripts = document.querySelectorAll('script[type^="math/tex"]');
-        console.log(`Found ${mathScripts.length} math/tex scripts in SpaceAC rule`);
-      } catch (e) {
-        console.error("Error checking SpaceAC math scripts:", e);
-      }
-    }
-
     try {
       // 寻找主要内容区域
       for (const selector of rule.contentSelectors) {
-        console.log(`Trying selector: ${selector}`);
+        console.warn(`Trying selector: ${selector}`);
         const element = document.querySelector(selector) as HTMLElement;
+        console.warn(`Element found for selector ${selector}:`, element);
         if (element) {
-          console.log(`Found element with selector: ${selector}, attempting content processing...`);
+          console.warn(
+            `Found element with selector: ${selector}, attempting content processing...`
+          );
           try {
-            console.log(`Rule processing content, rule type: ${rule.constructor.name}`);
+            console.warn(`Rule processing content, rule type: ${rule.constructor.name}`);
             const content = rule.processContent(element, document);
-            console.log(`Content processed, length: ${content?.trim()?.length || 0}`);
+            console.warn(`Content processed, length: ${content?.trim()?.length || 0}`);
             if (content && content.trim().length > 100) {
-              console.log(`Successfully extracted content with length: ${content.trim().length}`);
+              console.warn(`Successfully extracted content with length: ${content.trim().length}`);
               return {
                 title: document.title || "Unknown Title",
                 content: content,
@@ -134,7 +122,7 @@ export class ReadabilityRuleManager {
         }
       }
 
-      console.log("No main content found, falling back to body processing");
+      console.warn("No main content found, falling back to body processing");
       // 如果没找到主要内容，使用body作为备选
       const bodyClone = document.body.cloneNode(true) as HTMLElement;
 
@@ -205,8 +193,23 @@ export class ReadabilityRuleManager {
 
   /**
    * 获取用于浏览器环境的提取器代码和规则配置
+   * @param url 网页URL，用于选择适合的提取器代码
    */
-  getBrowserExtractorCode(): string {
+  getBrowserExtractorCode(url?: string): string {
+    if (url) {
+      const rule = this.selectRule(url);
+
+      // 如果是SpaceACRule，且实现了特定的提取器生成方法
+      if (
+        rule instanceof SpaceACRule &&
+        typeof (rule as any).generateSpecificBrowserExtractor === "function"
+      ) {
+        console.warn(`Using specific extractor code for rule: ${rule.name}`);
+        return (rule as any).generateSpecificBrowserExtractor();
+      }
+    }
+
+    // 默认使用通用提取器代码
     return RuleExtractor.generateBrowserExtractor();
   }
 

@@ -29,7 +29,7 @@ Atoms are extremely small, typically around 100 picometers across. A human hair 
 jest.setTimeout(30000);
 
 jest.mock("../encryptionService", () => ({
-  getDecryptedKey: jest.fn().mockImplementation((key) => Promise.resolve(key)),
+  getDecryptedKey: jest.fn().mockImplementation((key: string) => Promise.resolve(key)),
 }));
 
 describe("Composer Instructions - Integration Tests", () => {
@@ -148,7 +148,7 @@ describe("Composer Instructions - Integration Tests", () => {
     "Composer: add content to a note",
     `Add a tl;dr to [[atom]].
 
-     Title: [[atom]] 
+     Title: [[atom]]
      Path: atom.md
      ${atom_note}`
   );
@@ -157,7 +157,7 @@ describe("Composer Instructions - Integration Tests", () => {
     "Composer: rewrite a note",
     `@composer Rewrite the note [[atom]] to be more concise.
 
-     Title: [[atom]] 
+     Title: [[atom]]
      Path: atom.md
      ${atom_note}`
   );
@@ -166,7 +166,7 @@ describe("Composer Instructions - Integration Tests", () => {
     "Composer: remove content from a note",
     `@composer Remove the second paragraph.
 
-     Title: [[atom]] 
+     Title: [[atom]]
      Path: atom.md
      ${atom_note}`
   );
