@@ -26,4 +26,9 @@ export class GithubRule extends BaseReadabilityRule {
     ".table-list-header-toggle",
     ".file-info",
   ];
+
+  convertHtmlToMarkdown(html: string, url: string | null): string {
+    // 使用父类的转换方法
+    return super.convertHtmlToMarkdown(html, url);
+  }
 }

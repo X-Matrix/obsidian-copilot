@@ -55,4 +55,9 @@ export class NewsRule extends BaseReadabilityRule {
     mathJaxSelectors: [],
     scriptSelectors: [],
   };
+
+  convertHtmlToMarkdown(html: string, url: string | null): string {
+    // 使用父类的转换方法
+    return super.convertHtmlToMarkdown(html, url);
+  }
 }

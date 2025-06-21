@@ -34,6 +34,7 @@ import { Notice } from "obsidian";
 import ChainManager from "./chainManager";
 import { COPILOT_TOOL_NAMES, IntentAnalyzer } from "./intentAnalyzer";
 import ProjectManager from "./projectManager";
+import { App } from "obsidian";
 
 class ThinkBlockStreamer {
   private hasOpenThinkBlock = false;
@@ -517,8 +518,8 @@ class CopilotPlusChainRunner extends BaseChainRunner {
     logInfo("Enhanced user message: ", enhancedUserMessage);
     logInfo("==== Final Request to AI ====\n", messages);
 
-    // 将 enhancedUserMessage 写入当前 vault 的文档中
-    await this.writeToVaultFile(enhancedUserMessage);
+    // 写入vault file if the model is multimodal
+    this.writeToVaultFile(textContent, "", "", this.chainManager.app);
 
     const streamer = new ThinkBlockStreamer(updateCurrentAiMessage);
 
@@ -809,10 +810,21 @@ class CopilotPlusChainRunner extends BaseChainRunner {
     return getSystemPrompt();
   }
 
-  private async writeToVaultFile(content: string): Promise<void> {
+  private async writeToVaultFile(
+    content: string,
+    title: string,
+    url: string,
+    app: App
+  ): Promise<void> {
     try {
-      const vault = this.chainManager.app.vault;
-      const fileName = `copilot-enhanced-message-${Date.now()}.md`;
+      // 获取当前的APP
+      const vault = app.vault;
+      const title_normalized = title
+        .replace(/[^a-zA-Z0-9]/g, "_")
+        .toLowerCase()
+        .replace(":", "_")
+        .replace("?", "_");
+      const fileName = `copilot-${Date.now()}-${title_normalized}.md`;
       const filePath = `Copilot Logs/${fileName}`;
 
       // 确保目录存在
@@ -822,12 +834,16 @@ class CopilotPlusChainRunner extends BaseChainRunner {
         await vault.createFolder(folderPath);
       }
 
-      // 格式化内容
-      const formattedContent = `# Enhanced User Message
-Created: 2033-10-01
+      const current_date = formatDateTime(new Date()).display;
 
-${content}
-`;
+      // 格式化内容
+      const formattedContent = `
+  Created: ${current_date}
+  URL: ${url}
+  Title: ${title}
+  -------------------
+  ${content}
+  `;
 
       // 创建文件
       await vault.create(filePath, formattedContent);
